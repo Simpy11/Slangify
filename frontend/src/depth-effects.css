@@ -1,0 +1,147 @@
+/* Focused depth layer. Loaded last so legacy visual styles cannot flatten it. */
+.hero-art {
+  --tilt-x: 0deg;
+  --tilt-y: 0deg;
+  isolation: isolate;
+  perspective: 1050px;
+  transform: perspective(1050px) rotateX(var(--tilt-x)) rotateY(var(--tilt-y)) scale(1.08) !important;
+  transform-style: preserve-3d;
+  transition: transform 260ms cubic-bezier(.2,.75,.25,1);
+  will-change: transform;
+}
+
+.hero-art::after {
+  content: '';
+  position: absolute;
+  inset: 14% 10%;
+  z-index: -2;
+  border-radius: 50%;
+  background: rgba(34,211,238,.2);
+  filter: blur(34px);
+  transform: translateZ(-52px) scale(.88);
+  pointer-events: none;
+}
+
+.hero-art::before {
+  transform: translateZ(-28px);
+  animation: depth-orb-float 7s ease-in-out infinite;
+  will-change: transform;
+}
+
+.hero-art .orbit-one { transform: translateZ(-8px) rotate(-7deg); }
+.hero-art .orbit-two { transform: translateZ(4px) rotate(8deg); }
+.hero-art .speech-main {
+  transform: translateZ(42px) rotateX(-1deg);
+  box-shadow: 0 30px 60px rgba(2,8,23,.3), 0 0 34px rgba(34,211,238,.16), inset 0 1px rgba(255,255,255,.13) !important;
+}
+.hero-art .card-heart { transform: translateZ(64px) rotate(-5deg); }
+.hero-art .card-spark { transform: translateZ(52px) rotate(4deg); }
+.hero-art .ball-one { transform: translateZ(76px); }
+.hero-art .ball-two { transform: translateZ(34px); }
+.hero-art .ball-three { transform: translateZ(18px); }
+
+.hero-slang-chip {
+  box-shadow: 0 16px 34px rgba(2,8,23,.2), 0 0 18px rgba(34,211,238,.1), inset 0 1px rgba(255,255,255,.12) !important;
+}
+.chip-no-cap,.chip-rizz { z-index: 5; }
+.chip-slay,.chip-delulu { z-index: 3; }
+
+.nav.shell {
+  box-shadow: 0 22px 56px rgba(2,8,23,.2), 0 7px 20px rgba(37,99,235,.1), inset 0 1px rgba(255,255,255,.12) !important;
+}
+.nav.shell .nav-links > a.active {
+  transform: translateY(-1px);
+  box-shadow: 0 11px 25px rgba(37,99,235,.32), 0 3px 10px rgba(6,182,212,.16) !important;
+}
+
+.slang-card,.explore-slang-card {
+  transform-style: preserve-3d;
+  transition: transform 300ms cubic-bezier(.2,.75,.25,1), box-shadow 300ms ease, border-color 300ms ease !important;
+  will-change: transform;
+}
+.slang-card .emoji,.explore-slang-card .explore-emoji,
+.slang-card .card-top button,.explore-slang-card .favorite,
+.slang-card .badge,.explore-slang-card .explore-category {
+  transition: transform 300ms cubic-bezier(.2,.75,.25,1), color 200ms ease, background-color 200ms ease;
+}
+
+.voice-stage { perspective: 850px; transform-style: preserve-3d; }
+.mic-orb {
+  transform: translateZ(26px);
+  transform-style: preserve-3d;
+  box-shadow: 0 18px 34px rgba(37,99,235,.34), 0 0 30px rgba(34,211,238,.2), inset 0 2px rgba(255,255,255,.16) !important;
+  will-change: transform;
+}
+.mic-orb::before,.mic-orb::after {
+  content: '';
+  position: absolute;
+  inset: -20px;
+  border: 1px solid rgba(34,211,238,.25);
+  border-radius: 50%;
+  box-shadow: 0 0 22px rgba(34,211,238,.1);
+  pointer-events: none;
+  transform: translateZ(-18px);
+}
+.mic-orb::after { inset: -34px; border-color: rgba(96,165,250,.18); transform: translateZ(-38px); }
+.mic-orb .ring-one { transform: translateZ(-8px); }
+.mic-orb .ring-two { transform: translateZ(-26px); }
+.waveform { transform: translateZ(16px); }
+.waveform i:nth-child(3n) { background: linear-gradient(#22d3ee,#a3e635) !important; }
+
+.search-submit,.login-submit,.add-submit,.primary-button,.favorites-empty > a,.voice-input button:last-child {
+  box-shadow: 0 12px 0 -8px rgba(3,105,161,.55), 0 15px 30px rgba(37,99,235,.25), 0 0 18px rgba(6,182,212,.1) !important;
+  will-change: transform;
+}
+.search-submit:active,.login-submit:active,.add-submit:active,.primary-button:active,.favorites-empty > a:active,.voice-input button:last-child:active {
+  transform: translateY(1px) scale(.985) !important;
+  box-shadow: 0 7px 0 -7px rgba(3,105,161,.5), 0 8px 18px rgba(37,99,235,.2) !important;
+}
+
+@media (hover:hover) and (pointer:fine) {
+  .slang-card:hover,.explore-slang-card:hover {
+    transform: perspective(900px) translateY(-6px) rotateX(2.2deg) rotateY(-2.4deg) !important;
+    border-color: rgba(34,211,238,.45) !important;
+    box-shadow: 18px 24px 48px rgba(2,8,23,.24), 0 0 30px rgba(6,182,212,.16) !important;
+  }
+  .slang-card:nth-child(even):hover,.explore-slang-card:nth-child(even):hover {
+    transform: perspective(900px) translateY(-6px) rotateX(2.2deg) rotateY(2.4deg) !important;
+    box-shadow: -18px 24px 48px rgba(2,8,23,.24), 0 0 30px rgba(6,182,212,.16) !important;
+  }
+  .slang-card:hover .emoji,.explore-slang-card:hover .explore-emoji { transform: translateZ(24px) translateY(-2px); }
+  .slang-card:hover .card-top button,.explore-slang-card:hover .favorite { transform: translateZ(30px); }
+  .slang-card:hover .badge,.explore-slang-card:hover .explore-category { transform: translateZ(16px); }
+  .mic-orb:not(:disabled):hover { transform: translateZ(34px) translateY(-3px) scale(1.025) !important; }
+}
+
+.mic-orb.listening::before { animation: depth-ring-pulse 1.7s ease-out infinite; }
+.mic-orb.listening::after { animation: depth-ring-pulse 1.7s .45s ease-out infinite; }
+.mic-orb.listening .ring-one,.mic-orb.listening .ring-two { animation: depth-mic-ring 1.45s ease-out infinite; }
+.mic-orb.listening .ring-two { animation-delay: .6s; }
+
+@keyframes depth-orb-float {
+  0%,100% { transform: translate3d(0,0,-28px); }
+  50% { transform: translate3d(0,-7px,-18px); }
+}
+@keyframes depth-ring-pulse {
+  from { opacity: .5; transform: translateZ(-22px) scale(.86); }
+  to { opacity: 0; transform: translateZ(-38px) scale(1.28); }
+}
+@keyframes depth-mic-ring {
+  from { opacity: .7; transform: translateZ(-16px) scale(.9); }
+  to { opacity: 0; transform: translateZ(-38px) scale(1.38); }
+}
+
+@media (max-width:850px),(hover:none),(pointer:coarse) {
+  .hero-art { --tilt-x:0deg !important; --tilt-y:0deg !important; will-change:auto; }
+  .slang-card,.explore-slang-card { will-change:auto; }
+}
+
+@media (prefers-reduced-motion:reduce) {
+  .hero-art,.hero-art::before,.mic-orb,.mic-orb::before,.mic-orb::after,
+  .mic-orb .mic-ring,.slang-card,.explore-slang-card {
+    animation:none !important;
+    transition:none !important;
+  }
+  .hero-art { --tilt-x:0deg !important; --tilt-y:0deg !important; transform:perspective(1050px) scale(1.08) !important; }
+  .slang-card:hover,.explore-slang-card:hover { transform:none !important; }
+}

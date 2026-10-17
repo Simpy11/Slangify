@@ -1,0 +1,10 @@
+nav.nav.shell .nav-links>a.nav-buzz{display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap;padding:10px 13px;border:1px solid #d6bef4;border-radius:99px;background:linear-gradient(115deg,#eee4ff,#ffe5f1);color:#6734b7;font-weight:800;box-shadow:0 4px 14px #8644b51a}
+nav.nav.shell .nav-links>a.nav-buzz:hover{background:linear-gradient(115deg,#e4d3ff,#ffd5eb);color:#582399}
+nav.nav.shell .nav-links>a.nav-buzz.active{border-color:transparent;background:linear-gradient(110deg,#7c3aed,#a855f7 52%,#ec4899);color:white!important;box-shadow:0 8px 20px #8c3fd13d}
+nav.nav.shell .nav-buzz:focus-visible{outline:3px solid #b288f8;outline-offset:3px}
+:root[data-theme='dark'] nav.nav.shell .nav-links>a.nav-buzz{background:linear-gradient(115deg,#322044,#402237);border-color:#6d4581;color:#e5caff}
+:root[data-theme='dark'] nav.nav.shell .nav-links>a.nav-buzz.active{background:linear-gradient(110deg,#7134dc,#a83fba 55%,#d83c83);border-color:#ac71df;color:white!important}
+/* Collapse the expanded navigation before labels collide on tablets. */
+@media(min-width:621px) and (max-width:1150px){nav.nav.shell .menu-toggle{display:block}nav.nav.shell .nav-links{display:none;position:absolute;top:76px;left:0;right:0;flex-direction:column;align-items:stretch;gap:10px;padding:18px;border:1px solid #e6ddf2;border-radius:18px;background:#fffffff5;box-shadow:0 15px 30px #3d295a18}nav.nav.shell .nav-links.open{display:flex}nav.nav.shell .theme-toggle{width:100%;border-radius:12px}nav.nav.shell .login-button{justify-content:center;margin:0}:root[data-theme='dark'] nav.nav.shell .nav-links{background:#1b152cf5;border-color:#443456}}
+@media(max-width:1150px){nav.nav.shell .nav-links.open{max-height:calc(100dvh - 110px);overflow-y:auto}}
+@media(prefers-reduced-motion:reduce){nav.nav.shell .nav-buzz{transition:none!important}}
