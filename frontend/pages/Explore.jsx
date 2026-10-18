@@ -1,3 +1,4 @@
+import PronunciationButton from '../components/PronunciationButton.jsx'
 import BrandLogo from '../components/BrandLogo.jsx'
 import BuzzNavLink from '../components/BuzzNavLink.jsx'
 import { ArrowRight, Menu, Plus, Search, Sparkles, X } from 'lucide-react'
@@ -175,7 +176,7 @@ function Explore() {
       <div className="filter-group"><span>FILTER BY VIBE</span><div className="category-filters">{categories.map((item) => <button className={category === item ? 'selected' : ''} onClick={() => changeFilter(setCategory, item)} key={item} aria-pressed={category === item}>{item}</button>)}</div></div>
       <div className="explore-toolbar"><button type="button" className={trendingOnly ? 'trending-toggle selected' : 'trending-toggle'} aria-pressed={trendingOnly} onClick={() => changeFilter(setTrendingOnly, !trendingOnly)}>🔥 Trending only</button><label>Sort by <select value={sort} onChange={(event) => changeFilter(setSort, event.target.value)}><option value="popular">Popular</option><option value="newest">Newest</option><option value="alphabetical">Alphabetical</option></select></label></div>
       {showResults && !error && featured && <div className="explore-discovery">
-        <article className="word-of-day"><span className="wod-orb">{featured.emoji}</span><div><span>TOP OF THE VIBE</span><h2>{featured.word}</h2><p>{featured.meaning}</p></div><button type="button" onClick={() => changeFilter(setQuery, featured.word)}>Find the vibe <ArrowRight size={15} /></button></article>
+        <article className="word-of-day"><span className="wod-orb">{featured.emoji}</span><div><span>TOP OF THE VIBE</span><div className="slang-word-heading"><h2>{featured.word}</h2><PronunciationButton word={featured.word} /></div><p>{featured.meaning}</p></div><button type="button" onClick={() => changeFilter(setQuery, featured.word)}>Find the vibe <ArrowRight size={15} /></button></article>
         <div className="trending-rail"><span>FROM THE DICTIONARY</span><div>{slang.slice(0, 5).map((item, index) => <button key={item._id || item.word} onClick={() => changeFilter(setQuery, item.word)}><i>{index + 1}</i><b>{item.emoji}</b><span>{item.word}<small>{item.category}</small></span></button>)}</div></div>
       </div>}
       <div className="popular-heading" ref={resultsRef}><div><span className="section-kicker">hot right now <span>🔥</span></span><h2>{hasActiveFilters ? 'Your results' : 'Trending & popular'}</h2></div><span className="result-count">{total} words found</span></div>
