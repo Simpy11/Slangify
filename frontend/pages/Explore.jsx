@@ -49,7 +49,6 @@ function Explore() {
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      setLoading(true)
       const requestedLetter = searchParams.get('letter')?.toUpperCase()
       paginationTargetRef.current = null
       setPaginating(false)
