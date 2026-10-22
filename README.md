@@ -286,7 +286,7 @@ Backend tests use temporary in-memory MongoDB and do not use the configured `MON
 
 ## Deployment configuration
 
-No provider-specific deployment is configured. Production requires frontend build variable:
+For Vercel, use `frontend` as the project root, `npm run build` as the build command, and `dist` as the output directory. `frontend/vercel.json` routes direct links such as `/explore` to the React app. Production requires frontend build variable:
 
 ```env
 VITE_API_URL=https://<backend-domain>/api

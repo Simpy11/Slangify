@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { beforeEach, describe, expect, test, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import Explore from './Explore.jsx'
 import { getSlang } from '../src/services/slangService.js'
 
@@ -11,6 +11,7 @@ vi.mock('../components/AuthControl.jsx', () => ({ default: () => <span>Auth</spa
 vi.mock('../components/ThemeToggle.jsx', () => ({ default: () => <button>Theme</button> }))
 
 describe('Explore navigation state', () => {
+  afterEach(() => vi.useRealTimers())
   beforeEach(() => {
     Element.prototype.scrollIntoView = vi.fn()
     getSlang.mockReset()
@@ -62,7 +63,7 @@ describe('Explore navigation state', () => {
     fireEvent.change(screen.getByRole('textbox', { name: 'Search slang' }), { target: { value: 'rizz' } })
     fireEvent.click(screen.getByRole('button', { name: 'R' }))
     await waitFor(() => expect(getSlang.mock.calls.at(-1)[0]).toMatchObject({ category: 'Gaming', trending: true, sort: 'newest', search: 'rizz', letter: 'R', page: 1 }))
-    expect(await screen.findByText('No slang found')).toBeInTheDocument()
+    expect(await screen.findByText('No matching slang found')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }))
     await waitFor(() => expect(getSlang.mock.calls.at(-1)[0]).toMatchObject({ category: undefined, trending: undefined, sort: 'popular', search: undefined, letter: undefined, page: 1 }))
     expect(await screen.findByText('No slang yet')).toBeInTheDocument()
@@ -80,7 +81,7 @@ describe('Explore navigation state', () => {
     const input = screen.getByRole('textbox', { name: 'Search slang' })
     fireEvent.change(input, { target: { value: 'unknown' } })
     expect(screen.queryByRole('heading', { level: 3, name: 'Rizz' })).not.toBeInTheDocument()
-    await screen.findByText('No slang found')
+    await screen.findByText('No matching slang found')
     expect(getSlang.mock.calls.at(-1)[0]).toMatchObject({ search: 'unknown', page: 1 })
     fireEvent.change(input, { target: { value: '' } })
     await screen.findByRole('heading', { level: 3, name: 'Rizz' })
@@ -110,6 +111,71 @@ describe('Explore navigation state', () => {
     expect(screen.getByRole('heading', { level: 3, name: 'Rizz' })).toBeInTheDocument()
     expect(screen.queryByRole('heading', { level: 3, name: 'Alpha' })).not.toBeInTheDocument()
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+
+  test.each([
+    ['a', 'No Cap'], ['b', 'Bussin'], ['s', 'Bussin'], ['ri', 'Rizz'],
+    ['Delulu', 'Delulu'], ['dELuLu', 'Delulu'], ['No Cap', 'No Cap'],
+  ])('requests server search for %s and renders %s', async (search, word) => {
+    getSlang.mockImplementation(async (params) => params.search
+      ? { data: [{ _id: 'match', word, meaning: 'Meaning', category: 'Gen Z' }], total: 1, pages: 1 }
+      : { data: [], total: 0, pages: 0 })
+    render(<MemoryRouter><Explore /></MemoryRouter>)
+    await screen.findByText('No slang yet')
+    fireEvent.change(screen.getByRole('textbox', { name: 'Search slang' }), { target: { value: search } })
+    expect(screen.queryByText('No matching slang found')).not.toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 3, name: word })).toBeInTheDocument()
+    expect(getSlang.mock.calls.at(-1)[0]).toMatchObject({ search, page: 1, limit: 12 })
+  })
+
+  test('debounces rapid typing for exactly 300ms and hides old empty states during filter changes', async () => {
+    vi.useFakeTimers()
+    render(<MemoryRouter><Explore /></MemoryRouter>)
+    await act(async () => { await vi.advanceTimersByTimeAsync(300) })
+    expect(getSlang).toHaveBeenCalledTimes(1)
+    const input = screen.getByRole('textbox', { name: 'Search slang' })
+    fireEvent.change(input, { target: { value: 'r' } })
+    await act(async () => { await vi.advanceTimersByTimeAsync(200) })
+    fireEvent.change(input, { target: { value: 'ri' } })
+    await act(async () => { await vi.advanceTimersByTimeAsync(299) })
+    expect(getSlang).toHaveBeenCalledTimes(1)
+    expect(screen.queryByText('No matching slang found')).not.toBeInTheDocument()
+    await act(async () => { await vi.advanceTimersByTimeAsync(1) })
+    expect(getSlang).toHaveBeenCalledTimes(2)
+    expect(getSlang.mock.calls.at(-1)[0].search).toBe('ri')
+    expect(screen.getByText('No matching slang found')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Gaming' }))
+    expect(screen.queryByText('No matching slang found')).not.toBeInTheDocument()
+    await act(async () => { await vi.advanceTimersByTimeAsync(300) })
+    expect(getSlang.mock.calls.at(-1)[0]).toMatchObject({ search: 'ri', category: 'Gaming', page: 1 })
+  })
+
+  test('reselecting the active filter keeps the results available', async () => {
+    render(<MemoryRouter><Explore /></MemoryRouter>)
+    await screen.findByText('No slang yet')
+    fireEvent.click(screen.getByRole('button', { name: 'All', exact: true }))
+    expect(screen.getByText('No slang yet')).toBeInTheDocument()
+    expect(getSlang).toHaveBeenCalledTimes(1)
+  })
+
+  test('ignores old results arriving while the new search is still debouncing', async () => {
+    vi.useFakeTimers()
+    let finishOld
+    getSlang.mockImplementation(({ search }) => search === 'a'
+      ? new Promise(resolve => { finishOld = resolve })
+      : Promise.resolve({ data: [], total: 0, pages: 0 }))
+    render(<MemoryRouter><Explore /></MemoryRouter>)
+    await act(async () => { await vi.advanceTimersByTimeAsync(300) })
+    const input = screen.getByRole('textbox', { name: 'Search slang' })
+    fireEvent.change(input, { target: { value: 'a' } })
+    await act(async () => { await vi.advanceTimersByTimeAsync(300) })
+    fireEvent.change(input, { target: { value: 'ri' } })
+    await act(async () => finishOld({ data: [{ _id: 'old', word: 'Alpha' }], total: 1, pages: 1 }))
+    expect(screen.queryByRole('heading', { level: 3, name: 'Alpha' })).not.toBeInTheDocument()
+    expect(screen.queryByText('No matching slang found')).not.toBeInTheDocument()
+    expect(screen.getByLabelText('Loading slang')).toBeInTheDocument()
+    await act(async () => { await vi.advanceTimersByTimeAsync(300) })
+    expect(screen.getByText('No matching slang found')).toBeInTheDocument()
   })
 
   test('scrolls once after each new page renders, never on initial load or filters', async () => {

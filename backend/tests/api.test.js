@@ -245,6 +245,33 @@ describe('search, filters, sorting, and pagination', () => {
     expect(response.body.total).toBe(words.length)
   })
 
+  test.each([
+    ['a', ['alpha', 'no cap', 'ratio']],
+    ['b', ['bussin']], ['s', ['bussin']], ['c', ['no cap']],
+    ['ri', ['drip', 'rizz']], ['Delulu', ['delulu']],
+    ['dELuLu', ['delulu']], ['No Cap', ['no cap']], ['  nO cAp  ', ['no cap']],
+  ])('searches the MongoDB collection for %j', async (search, words) => {
+    await Slang.insertMany([
+      { word: 'no cap', meaning: 'No lie', example: 'No cap', category: 'Gen Z' },
+      { word: 'bussin', meaning: 'Excellent', example: 'That is bussin', category: 'Gen Z' },
+    ])
+    const response = await request(app).get('/api/slang').query({ search, sort: 'alphabetical' })
+    expect(response.status).toBe(200)
+    expect(response.body.data.map(item => item.word)).toEqual(words)
+    expect(response.body.total).toBe(words.length)
+  })
+
+  test('searches beyond the first twelve documents before paginating', async () => {
+    await Slang.insertMany(Array.from({ length: 15 }, (_, index) => ({
+      word: `z phrase ${index}`, meaning: 'Meaning', example: 'Example', category: 'Other',
+    })))
+    const response = await request(app).get('/api/slang').query({ search: 'phrase', limit: 12, page: 1 })
+    expect(response.status).toBe(200)
+    expect(response.body.total).toBe(15)
+    expect(response.body.data).toHaveLength(12)
+    expect(response.body.pages).toBe(2)
+  })
+
   test('ANDs word search with letter, category and trending and paginates matching results', async () => {
     const matching = await request(app).get('/api/slang').query({ search: 'IZZ', letter: 'R', category: 'Gen Z', trending: true, sort: 'alphabetical' })
     expect(matching.body.data.map((item) => item.word)).toEqual(['rizz'])

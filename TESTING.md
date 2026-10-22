@@ -86,3 +86,11 @@ Also manually check rapid Start/Stop clicks, typing while recognition is active,
 In browser developer tools, check 375×667, 390×844, 768×1024, and 1440×900. Inspect the navbar, homepage hero/search/cards/A–Z controls, Explore filters and pagination, Favorites, Add Slang, Voice Assistant, login/signup, and footer.
 
 At each size verify there is no horizontal overflow, clipped text, overlap, broken grid, inaccessible form field, or button with an unusably small hit area. Also open/close the mobile navigation and exercise loading, empty, API-error, validation-error, and logged-out protected-action states.
+
+## Explore search regression
+
+Frontend tests cover the 300ms debounce, page reset, filters, cancellation (including responses arriving during debounce), and genuine empty versus API error states. Service tests verify `/api/slang` and the `search` parameter. Backend tests use real temporary MongoDB queries for single letters, substrings, full words, mixed case, phrases, literal regex characters, and matches beyond the first twelve documents.
+
+On October 22, 2026, read-only production checks against the API configured in the public Vercel bundle returned 620 matches for `a`, 189 for `b`, 317 for `s`, 34 for `ri`, 6 for both `Delulu` and `dELuLu`, and 3 for `No Cap`. The reported single-letter failure was not reproduced in the API or baseline local tests. Direct `/explore` requests did return Vercel 404; the frontend Vercel rewrite fixes that routing issue after redeployment. These observations do not establish the cause of an intermittent browser search failure.
+
+After deployment, open `/explore` directly and refresh it. Search from page 2 and verify the request uses `page=1`; combine category and Trending Only with each sort mode. Inspect the network request to confirm `search=a` reaches the configured production backend. A category, initial-letter filter, and Trending Only intentionally narrow the search together.

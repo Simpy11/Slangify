@@ -45,9 +45,11 @@ function Explore() {
   const [menuOpen, setMenuOpen] = useState(false)
   const resultsRef = useRef(null)
   const paginationTargetRef = useRef(null)
+  const requestControllerRef = useRef(null)
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
+      setLoading(true)
       const requestedLetter = searchParams.get('letter')?.toUpperCase()
       paginationTargetRef.current = null
       setPaginating(false)
@@ -62,6 +64,7 @@ function Explore() {
 
   useEffect(() => {
     const controller = new AbortController()
+    requestControllerRef.current = controller
     const timer = window.setTimeout(async () => {
       setLoading(true)
       setError('')
@@ -81,7 +84,7 @@ function Explore() {
       } finally {
         if (!controller.signal.aborted) { setLoading(false); setPaginating(false) }
       }
-    }, 400)
+    }, 300)
     return () => { window.clearTimeout(timer); controller.abort() }
   }, [query, category, letter, sort, trendingOnly, page, retryKey])
 
@@ -157,8 +160,29 @@ function Explore() {
     setLoading(true)
     setPage(nextPage)
   }
-  const changeFilter = (setter, value) => { paginationTargetRef.current = null; setPaginating(false); setter(value); setPage(1) }
-  const clearFilters = () => { paginationTargetRef.current = null; setPaginating(false); setQuery(''); setCategory('All'); setLetter('All'); setSort('popular'); setTrendingOnly(false); setPage(1) }
+  const changeFilter = (setter, value) => {
+    const filters = [[setQuery, query], [setCategory, category], [setLetter, letter], [setSort, sort], [setTrendingOnly, trendingOnly]]
+    if (filters.some(([filterSetter, current]) => filterSetter === setter && current === value)) return
+    // Invalidate in-flight results immediately, including during the debounce window.
+    requestControllerRef.current?.abort()
+    paginationTargetRef.current = null
+    setLoading(true)
+    setPaginating(false)
+    setter(value)
+    setPage(1)
+  }
+  const clearFilters = () => {
+    requestControllerRef.current?.abort()
+    paginationTargetRef.current = null
+    setLoading(true)
+    setPaginating(false)
+    setQuery('')
+    setCategory('All')
+    setLetter('All')
+    setSort('popular')
+    setTrendingOnly(false)
+    setPage(1)
+  }
   const hasActiveFilters = Boolean(query.trim() || category !== 'All' || letter !== 'All' || trendingOnly)
   const featured = slang[0]
   const showResults = !loading || paginating
@@ -170,7 +194,7 @@ function Explore() {
       <div id="primary-links" className={`nav-links ${menuOpen ? 'open' : ''}`}><Link to="/">Home</Link><Link className="active" to="/explore">Explore</Link><BuzzNavLink onClick={() => setMenuOpen(false)} /><Link to="/favorites">Favorites</Link><Link to="/add-slang">Add Slang</Link><Link to="/voice-assistant">Voice AI</Link><ThemeToggle /><AuthControl /></div>
     </nav>
 
-    <section className="explore-hero"><div className="shell"><span className="explore-eyebrow"><Sparkles size={14} fill="currentColor" /> the internet, decoded</span><h1>Explore <span>Slang</span></h1><p>Find the latest words, phrases, and internet expressions.</p><label className="explore-search"><Search size={20} /><input value={query} onChange={(event) => { setLoading(true); changeFilter(setQuery, event.target.value) }} placeholder="Search slang..." aria-label="Search slang" /></label></div></section>
+    <section className="explore-hero"><div className="shell"><span className="explore-eyebrow"><Sparkles size={14} fill="currentColor" /> the internet, decoded</span><h1>Explore <span>Slang</span></h1><p>Find the latest words, phrases, and internet expressions.</p><label className="explore-search"><Search size={20} /><input value={query} onChange={(event) => changeFilter(setQuery, event.target.value)} placeholder="Search slang..." aria-label="Search slang" /></label></div></section>
 
     <section className="explore-content shell"><Link className="explore-add-link" to="/add-slang"><Plus size={15} /> Add new slang</Link>
       <div className="filter-group"><span>FILTER BY VIBE</span><div className="category-filters">{categories.map((item) => <button className={category === item ? 'selected' : ''} onClick={() => changeFilter(setCategory, item)} key={item} aria-pressed={category === item}>{item}</button>)}</div></div>
@@ -184,7 +208,7 @@ function Explore() {
       {!loading && error && <div className="api-state api-error" role="alert"><h3>Couldn't load slang right now.</h3><p>{error}</p><button type="button" onClick={() => setRetryKey((value) => value + 1)}>Retry</button></div>}
       {favoriteError && <p className="favorite-feedback" role="alert">{favoriteError}</p>}
       {showResults && !error && <div className="explore-grid" aria-busy={loading}>{slang.map((item) => <SlangCard key={item._id} slang={item} isFavorite={isAuthenticated && activeFavorites.includes(item._id)} isFavoritePending={isAuthenticated && (favoritesLoading || favoritePending.includes(item._id))} onToggleFavorite={toggleFavorite} />)}</div>}
-      {!loading && !error && slang.length === 0 && <div className="empty-state"><span>👀</span><h3>{hasActiveFilters ? 'No slang found' : 'No slang yet'}</h3><p>{hasActiveFilters ? 'Try another word, category, or letter.' : 'The dictionary is empty. Add the first slang word to get things started.'}</p>{hasActiveFilters ? <button type="button" onClick={clearFilters}>Clear filters</button> : <Link className="empty-add-link" to="/add-slang">Add new slang</Link>}</div>}
+      {!loading && !error && total === 0 && slang.length === 0 && <div className="empty-state"><span>👀</span><h3>{hasActiveFilters ? 'No matching slang found' : 'No slang yet'}</h3><p>{hasActiveFilters ? 'Try another word, category, or letter.' : 'The dictionary is empty. Add the first slang word to get things started.'}</p>{hasActiveFilters ? <button type="button" onClick={clearFilters}>Clear filters</button> : <Link className="empty-add-link" to="/add-slang">Add new slang</Link>}</div>}
       {showResults && !error && total > 0 && <nav className="pagination" aria-label="Slang pages"><button type="button" disabled={loading || page === 1} onClick={() => changePage(page - 1)}>Previous</button><span>Page {page} of {pages}</span><button type="button" disabled={loading || page >= pages} onClick={() => changePage(page + 1)}>Next</button></nav>}
     </section>
 
